@@ -9,5 +9,6 @@ public class TripsDTO
     public DateTime DateTo { get; set; }
     public int MaxPeople { get; set; }
 
+    
     public List<string> Countries { get; set; } = new();
 }
