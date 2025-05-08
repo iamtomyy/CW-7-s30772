@@ -1,0 +1,120 @@
+1. GET /api/trips
+-----------------
+Opis: Pobiera wszystkie wycieczki dostępne w systemie wraz z informacjami o krajach.
+
+
+2. GET /api/clients/{id}/trips
+------------------------------
+Opis: Pobiera wszystkie wycieczki, na które zapisany jest dany klient, wraz z datą rejestracji, płatności oraz krajami.
+
+3. POST /api/clients
+--------------------
+Opis: Dodaje nowego klienta do systemu.
+
+4. PUT /api/clients/{id}/trips/{tripId}
+----------------------------------------
+Opis: Rejestruje klienta na wycieczkę, jeśli są dostępne miejsca.
+
+5. DELETE /api/clients/{id}/trips/{tripId}
+------------------------------------------
+Opis: Usuwa rejestrację klienta z wycieczki.
+
+
+
+
+
+ZAPYTANIA SQL:
+
+SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople, c.Name AS Country
+FROM Trip t
+LEFT JOIN Country_Trip ct ON ct.IdTrip = t.IdTrip
+LEFT JOIN Country c ON c.IdCountry = ct.IdCountry
+ORDER BY t.IdTrip;
+
+Opis działania:
+
+Pobiera listę wszystkich wycieczek z tabeli Trip.
+
+Dla każdej wycieczki pobiera również nazwę kraju (z tabeli Country) przypisanego do niej za pośrednictwem tabeli pośredniczącej Country_Trip.
+
+Użycie LEFT JOIN oznacza, że również wycieczki bez przypisanych krajów zostaną wyświetlone (z NULL w kolumnie Country).
+
+Wynik jest posortowany rosnąco według IdTrip.
+
+--------------------
+
+SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople, ct.RegisteredAt, ct.PaymentDate, c.Name AS CountryName
+FROM Client_Trip ct
+JOIN Trip t ON t.IdTrip = ct.IdTrip
+JOIN Country_Trip ctr ON ctr.IdTrip = t.IdTrip
+JOIN Country c ON c.IdCountry = ctr.IdCountry
+WHERE ct.IdClient = @id
+ORDER BY t.IdTrip;
+
+Cel zapytania:
+Zwrócić pełne informacje o wszystkich wycieczkach, w których uczestniczy dany klient – łącznie z krajem, datami i statusem rejestracji.
+
+--------------------
+
+INSERT INTO Client (FirstName, LastName, Email, Telephone, Pesel)
+OUTPUT INSERTED.IdClient
+VALUES (@FirstName, @LastName, @Email, @Telephone, @Pesel);
+
+Cel zapytania:
+Dodać klienta do bazy danych i od razu uzyskać jego unikalny identyfikator (potrzebny np. do dalszego przypisania do wycieczki).
+
+--------------------
+
+SELECT 1 FROM Client WHERE IdClient = @id
+
+Cel zapytania:
+Używane jako szybka walidacja istnienia klienta, np. przed jego usunięciem, zarejestrowaniem na wycieczkę czy wykonaniem aktualizacji.
+
+--------------------
+
+SELECT MaxPeople FROM Trip WHERE IdTrip = @tripId
+Cel zapytania:
+
+Sprawdzenie limitu miejsc na danej wycieczce – może być używane do walidacji przed zapisaniem nowego klienta.
+
+Na przykład: jeśli liczba aktualnie zapisanych osób osiągnie MaxPeople, system może zablokować kolejne rejestracje.
+
+--------------------
+
+SELECT COUNT(*) FROM Client_Trip WHERE IdTrip = @tripId
+
+Cel zapytania:
+
+Określa ilu klientów jest już zapisanych na daną wycieczkę.
+
+Używane razem z wartością MaxPeople (z poprzedniego zapytania), aby sprawdzić, czy można jeszcze dodać nowego uczestnika do tej wycieczki.
+
+--------------------
+
+SELECT 1 FROM Client_Trip WHERE IdClient = @id AND IdTrip = @tripId
+
+Cel zapytania:
+
+Walidacja przed próbą ponownego przypisania klienta do tej samej wycieczki.
+
+Zapobiega duplikatom wpisów w tabeli Client_Trip.
+
+--------------------
+
+SELECT 1 FROM Client_Trip WHERE IdClient = @id AND IdTrip = @tripId
+Cel zapytania:
+
+Służy do walidacji, czy dany klient już jest zapisany na daną wycieczkę.
+
+Pomaga uniknąć podwójnych zapisów (duplikatów) w tabeli Client_Trip.
+
+--------------------
+
+DELETE FROM Client_Trip WHERE IdClient = @id AND IdTrip = @tripId
+Cel zapytania:
+
+Wyrejestrowuje klienta z konkretnej wycieczki, usuwając informację o jego udziale.
+
+Stosowane np. gdy klient chce zrezygnować z udziału lub gdy administrator usuwa przypisanie.
+
+--------------------
