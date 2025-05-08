@@ -12,4 +12,3 @@ public class TripPerClientDTO
     public DateTime? PaymentDate { get; set; }
     public List<string> Countries { get; set; } = new();
 }
-
