@@ -8,3 +8,4 @@ public class ClientsDTO
     public string Telephone { get; set; } = null!;
     public string Pesel { get; set; } = null!;
 }
+
