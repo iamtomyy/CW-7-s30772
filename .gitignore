@@ -1,0 +1,20 @@
+# Build
+bin/
+obj/
+
+# IDEs
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+
+# Configuration
+appsettings.Development.json
